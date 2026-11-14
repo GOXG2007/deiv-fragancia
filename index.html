@@ -340,22 +340,55 @@
             cartTotalPrice.innerText = `$${total.toLocaleString('es-MX')} MXN`;
         }
 
-        function checkout() {
+        async function checkout() {
             if (cart.length === 0) return;
             
+            let cartSummary = {};
             let total = 0;
             let text = "¡Hola! Ya hice la transferencia de mi pedido. Aquí están los detalles:%0A%0A";
             
             cart.forEach(item => {
-                text += `▪️ ${item.name} - $${item.price.toLocaleString('es-MX')}%0A`;
+                if(cartSummary[item.id]) {
+                    cartSummary[item.id].qty += 1;
+                } else {
+                    cartSummary[item.id] = { name: item.name, qty: 1, price: item.price };
+                }
                 total += item.price;
             });
-            
+
+            let backendPayload = [];
+            for (const id in cartSummary) {
+                let p = cartSummary[id];
+                text += `▪️ ${p.qty}x ${p.name} - $${(p.price * p.qty).toLocaleString('es-MX')}%0A`;
+                backendPayload.push({ id: parseInt(id), qty: p.qty });
+            }
             text += `%0A*TOTAL TRANSFERIDO: $${total.toLocaleString('es-MX')} MXN*%0A%0A`;
             text += "Enseguida te mando la captura del depósito por aquí. ¡Gracias!";
+
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxlO1IamfLi8q0NnpttNKdHXeNFicgEZ-ne_LCiRzQNTirCOlfWObJZb6SxceXu40pVcw/exec';
+            
+            const btnWhatsapp = document.getElementById('btn-whatsapp');
+            btnWhatsapp.innerText = "Procesando inventario...";
+            btnWhatsapp.style.pointerEvents = "none";
+
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ cart: backendPayload }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+            } catch (e) {
+                console.error("Error actualizando stock:", e);
+            }
+
+            cart = [];
+            updateCartUI();
+            toggleCart();
             
             const url = `https://wa.me/${phone}?text=${text}`;
             window.open(url, '_blank');
+            
+            btnWhatsapp.innerText = "Confirmar Pedido (WhatsApp)";
         }
 
         let toastTimeout;
