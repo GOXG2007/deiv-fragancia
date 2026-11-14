@@ -68,7 +68,9 @@
 
         .product-info { padding: 1.5rem; text-align: center; display: flex; flex-direction: column; flex-grow: 1; }
         .product-title { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 5px; }
-        .product-price { font-weight: 600; font-size: 1rem; margin-bottom: 15px; color: #eee; }
+        .product-price { font-weight: 600; font-size: 1rem; margin-bottom: 5px; color: #eee; }
+        .stock-text { font-size: 0.8rem; color: #aaa; margin-bottom: 15px; }
+        .stock-text span { color: var(--gold); font-weight: bold; }
         .btn-add {
             background: transparent; color: var(--gold); border: 1px solid var(--gold);
             padding: 10px; border-radius: 4px; font-weight: 600; cursor: pointer;
@@ -112,6 +114,50 @@
             visibility: visible;
             opacity: 1;
             bottom: 50px;
+        }
+
+        /* Modal Personalizado de Error de Stock */
+        #error-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        #error-modal-content {
+            background-color: #111111;
+            border: 1px solid #d4af37;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            max-width: 80%;
+            color: #ffffff;
+            font-family: sans-serif;
+            box-shadow: 0px 4px 15px rgba(212, 175, 55, 0.3);
+        }
+        #error-modal-content h3 {
+            color: #d4af37;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        #error-btn {
+            background-color: #d4af37;
+            color: #000000;
+            border: none;
+            padding: 12px 20px;
+            margin-top: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        #error-btn:hover {
+            background-color: #fce38a;
         }
 
         .cart-modal-overlay {
@@ -175,6 +221,15 @@
     <div class="toast" id="toast"></div>
     
     <div id="refresh-toast">🔄 Recuerda refrescar la página para ver el inventario más actualizado.</div>
+
+    <!-- Contenedor del Modal de Error -->
+    <div id="error-modal">
+        <div id="error-modal-content">
+            <h3>⚠️ Aviso de Inventario</h3>
+            <p id="error-message"></p>
+            <button id="error-btn" onclick="cerrarErrorYRefrescar()">Aceptar y Actualizar</button>
+        </div>
+    </div>
 
     <div class="filters">
         <button class="btn-filter active" onclick="filterData('todos', event)">Todo</button>
@@ -295,6 +350,7 @@
                         <div class="product-info">
                             <h3 class="product-title">${p.name}</h3>
                             <p class="product-price">$${p.price.toLocaleString('es-MX')} MXN</p>
+                            <p class="stock-text">Stock disponible: <span>${p.stock}</span></p>
                             ${buttonHTML}
                         </div>
                     </div>
@@ -369,6 +425,17 @@
             cartTotalPrice.innerText = `$${total.toLocaleString('es-MX')} MXN`;
         }
 
+        // Funciones para mostrar y ocultar el nuevo modal de error
+        function mostrarError(mensaje) {
+            document.getElementById('error-message').innerText = mensaje;
+            document.getElementById('error-modal').style.display = 'flex';
+        }
+
+        function cerrarErrorYRefrescar() {
+            document.getElementById('error-modal').style.display = 'none';
+            location.reload(); // Recarga la página automáticamente para ver el stock real
+        }
+
         async function checkout() {
             if (cart.length === 0) return;
             
@@ -413,7 +480,8 @@
                 
                 // Si el Excel dice que ya no hay piezas suficientes
                 if (result.status === "error") {
-                    alert("¡Aviso!\n\n" + result.message);
+                    // Lanzar el nuevo diseño de Modal de Error en vez del gris por defecto
+                    mostrarError(result.message);
                     btnWhatsapp.innerText = "Confirmar Pedido (WhatsApp)";
                     btnWhatsapp.style.pointerEvents = "auto";
                     return; // Esto detiene la función y NO abre WhatsApp
@@ -466,7 +534,7 @@
 
         loadInventory();
 
-        // Mostrar el pop-up cada 3 minutos (180,000 milisegundos)
+        // Mostrar el pop-up de recomendación cada 3 minutos (180,000 milisegundos)
         setInterval(() => {
             const toast = document.getElementById("refresh-toast");
             if (toast) {
