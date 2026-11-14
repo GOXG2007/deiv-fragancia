@@ -421,5 +421,51 @@
 
         loadInventory();
     </script>
+    <!-- Notificación Pop-up de actualización -->
+<style>
+    #refresh-toast {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #000000;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 8px;
+        padding: 15px;
+        position: fixed;
+        z-index: 9999;
+        left: 50%;
+        bottom: 30px;
+        transform: translateX(-50%);
+        border: 1px solid #d4af37; /* Borde dorado */
+        box-shadow: 0px 4px 10px rgba(212, 175, 55, 0.2);
+        font-family: sans-serif;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.5s, bottom 0.5s;
+    }
+    #refresh-toast.show {
+        visibility: visible;
+        opacity: 1;
+        bottom: 50px;
+    }
+</style>
+
+<div id="refresh-toast">
+    🔄 Recuerda refrescar la página para ver el inventario más actualizado.
+</div>
+
+<script>
+    // Mostrar el pop-up cada 3 minutos (180,000 milisegundos)
+    setInterval(() => {
+        const toast = document.getElementById("refresh-toast");
+        toast.className = "show";
+        
+        // Ocultarlo automáticamente después de 5 segundos
+        setTimeout(() => {
+            toast.className = toast.className.replace("show", "");
+        }, 5000);
+    }, 180000); 
+</script>
+<!-- Fin de Notificación -->
 </body>
 </html>
